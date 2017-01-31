@@ -11,8 +11,8 @@ void swap(int *x, int *y){
 }
 
 int main(){
-	// C is pass by value
 
+	// C is pass by value
 	int number; // an int 
 	int* int_ptr; // a pointer to an int 
 
