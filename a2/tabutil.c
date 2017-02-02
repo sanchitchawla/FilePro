@@ -22,18 +22,30 @@ void tab_spaces(int n) {
 
 }
 
-void spaces_tab(){
+void spaces_tab(int n){
 	char in = getchar();
 	int i=0;
+
     while (in!= EOF) {
-        if (in == '\t') {
-            while (i < n) {
+        if (in == ' ') {
+            i++; 
+        } 
+        else if (i!=0 && in!=' '){
+            while (i!=0){
+
                 putchar(' ');
-                i++;
+                i--;
             }
-            i = 0;
-        } else {
             putchar(in);
+        }
+        else {
+            i=0;
+            putchar(in); 
+        }
+
+        if (i==n){
+            putchar('\t');
+            i=0;
         }
         in = getchar();
     }
@@ -48,7 +60,7 @@ int main(int argc, char const *argv[]){
 		tab_spaces(n);
 	}
 	else if (strcmp(argv[1], "-e") ==0){
-		printf("Do -e");
+        spaces_tab(n);
 	}
 
 	return 0;
