@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -15,7 +14,6 @@ void count_each( int* occur){
 		}
 		input = getchar();
 	}
-
 
 }
 
