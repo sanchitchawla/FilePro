@@ -20,8 +20,9 @@ void count_each( int* occur){
 void draw_hist(int* occur){
 
 	int max = 0;
+	int i, j, k;
 
-	for (int i = 0; i < 26; i++){
+	for (i = 0; i < 26; i++){
 
 		if (occur[i] > max){
 			max = occur[i];
@@ -30,8 +31,8 @@ void draw_hist(int* occur){
 
 	printf("\n");
 
-	for (int j = max; j > 0; j--){
-		for (int k = 0; k < 26; k++){
+	for (j = max; j > 0; j--){
+		for (k = 0; k < 26; k++){
 			if (occur[k] < j){
 				printf(" ");
 			}

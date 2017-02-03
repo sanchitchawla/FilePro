@@ -56,7 +56,12 @@ void read_board_from_file(char *filename, life_board *board)
  ********************************************************************/
 int get_index(life_board board, int row, int col)
 {
-	return 0; // TODO: implement me
+
+	int my_col = board.num_cols;
+
+	int n = (row * my_col) + col;
+
+	return n; 
 }
 /********************************************************************
  * set_alive - set the given cell to alive
@@ -96,7 +101,14 @@ void set_dead(life_board board, int row, int col)
  ***********************************************************************/
 int is_in_range(life_board board, int row, int col)
 {
-	return 0; // TODO: implement me
+	int my_row = board.num_rows;
+	int my_col = board.num_cols;
+
+	if (my_row > row && row >= 0 && my_col > col && col >= 0){
+		return 1;
+	}
+
+	return 0; 
 }
 
 /***********************************************************************
@@ -105,16 +117,40 @@ int is_in_range(life_board board, int row, int col)
  ***********************************************************************/
 int is_alive(life_board board, int row, int col)
 {
-	return 0; // TODO: implement me
+
+	if (!is_in_range(board,row,col)){
+		return 0;
+	}
+
+	int i = get_index(board,row,col);
+
+	if (board.cells[i]){
+		return 1;
+	}
+
+	else{
+		return 0;
+	}
 }
 
-/***********************************************************************
+/**********************************************************************
  * count_live_nbrs - returns the number of alive neighbors that a cell
  *    has by adding together the result of is_alive for all 8 directions.
  ***********************************************************************/
 int count_live_nbrs(life_board board, int row, int col)
 {
-	return 0; // TODO: implement me
+
+	int i = 0;
+
+	i+= is_alive(board, row-1, col-1);
+	i+= is_alive(board, row-1, col);
+	i+= is_alive(board, row-1, col+1);
+	i+= is_alive(board, row, col-1);
+	i+= is_alive(board, row, col+1);
+	i+= is_alive(board, row+1, col-1);
+	i+= is_alive(board, row+1, col);
+	i+= is_alive(board, row+1, col+1);
+	return i; 
 }
 
 /***********************************************************************
@@ -124,5 +160,31 @@ int count_live_nbrs(life_board board, int row, int col)
  ***********************************************************************/
 void make_next_board(life_board current, life_board next)
 {
-	return 0; // TODO: implement me
+	int i,j,ncount;
+	int my_row = current.num_rows;
+	int my_col = current.num_cols;
+
+
+	for (i = 0; i < my_row; i++){
+		for (j = 0; j < my_col;j++){
+			ncount = count_live_nbrs(current,i,j);
+			if (is_alive(current,i,j)){
+				if (ncount== 2 || ncount==3){
+					set_alive(next,i,j);
+				}
+				else{
+					set_dead(next,i,j);
+				}
+			}
+			else{
+
+				if (ncount==3){
+					set_alive(next,i,j);
+				}
+				else{
+					set_dead(next,i,j);
+				}
+			}
+		}
+	}
 }

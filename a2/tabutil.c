@@ -53,8 +53,13 @@ void spaces_tab(int n){
 }
 
 int main(int argc, char const *argv[]){
+    int n;
 
-	int n = atoi(argv[2]);
+    if (argc!=4){
+        return 1;
+    }
+
+	n = atoi(argv[2]);
 	
 	if (strcmp(argv[1], "-d") ==0){
 		tab_spaces(n);
