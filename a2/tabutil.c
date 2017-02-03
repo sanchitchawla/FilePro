@@ -55,7 +55,7 @@ void spaces_tab(int n){
 int main(int argc, char const *argv[]){
     int n;
 
-    if (argc!=4){
+    if (argc!=3){
         return 1;
     }
 
