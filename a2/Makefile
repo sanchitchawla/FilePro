@@ -14,7 +14,7 @@ life:
 	$(CC) -Wall -W -pedantic -o life life_engine.c life_driver.c
 
 unscramble:
-	$(CC) $(CFLAGS) -o unscramble unscramble.c
+	$(CC) -Wall -W -pedantic -g -o unscramble unscramble.c
 
 clean:
 	$(RM) vert_hist tabutil life unscramble
