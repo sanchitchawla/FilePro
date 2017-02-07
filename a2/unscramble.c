@@ -1,57 +1,69 @@
 # include <stdio.h>
 # include <stdlib.h>
-# include <assert.h>
 # include <string.h>
 
 
-int cmpstringp(const void*  p1, const void* p2)
-{
+int cmpstringp(const void*  p1, const void* p2){
 
-   return *(char*)p1 -  *(char*)p2;
+   return *(char*)p1 - *(char*)p2;
 }
 
 
-void anagram(char* w){
-	qsort(w, strlen(w), sizeof(char), cmpstringp);
-}
 
 void go(FILE* d, FILE* j, char* jum,char* dic , char* dic2 ){
 
-	char* jumble = fgets(jum, 20, j); 
-	char* dicline= fgets(dic, 30, d);
-
 	int jlen, dlen;
-	
 	 
-	while (jumble!=NULL){
-		jlen = strlen(jumble) -1;
-		anagram(jumble);
-		printf("%s:",jumble );
-		if (jumble[jlen] == '\n'){
-			jumble[jlen] = '\0';
+	while (fgets(jum, 20, j)!=NULL){
+
+		jlen = strlen(jum) -1;
+
+		if (jum[jlen] == '\n'){
+			jum[jlen] = '\0';
 		}
+
+		printf("%s:",jum);
+		qsort(jum, strlen(jum), sizeof(char), cmpstringp);
 		int count = 0;
-		while (dicline!=NULL){
-			dlen = strlen(dicline) -1;
-			anagram(dicline);
+
+		while (fgets(dic, 30, d)!=NULL){
+
+			dlen = strlen(dic) - 1;
+
+			if (dic[dlen] == '\n'){
+				dic[dlen] = '\0';
+			}
+
 			strcpy(dic2, dic);
-			if (strcmp(dicline, jumble)){
-				printf("%s ", dic);
+			qsort(dic, strlen(dic), sizeof(char), cmpstringp);
+
+			if (strcmp(dic, jum)==0){
+				printf(" %s", dic2);
 				count++;
 
 			}
-			dicline= fgets(dic, 30, d);
 
+			if (dic==NULL){
+				printf("done\n");
+				break;
+			}
+			
 		}
+
 		if (count==0){
-			printf("NO MATCHES\n");
+			printf(" NO MATCHES\n");
 		}
+
 		else{
 			printf("\n");
 			
 		}
-		jumble = fgets(jum, 20, j);
+
+		rewind(d);
 	}
+
+	fclose(d);
+	fclose(j);
 
 }
 
