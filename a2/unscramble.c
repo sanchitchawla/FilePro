@@ -18,7 +18,19 @@ void anagram(char* w){
 void go(FILE* d, FILE* j, char* jum,char* dic, char* dic2 ){
 
 
-	char g = fgets(jum, strlen(jum), d);
+	char jumble = fgets(jum, strlen(jum), d);
+	char dicline    = fgets(dic, strlen(dic), j);
+	//printf("%s : %s",*jumble, *dic);
+
+	while (jumble!='\0'){
+		while (dicline!='\0'){
+			if (qsort(jumble)==qsort(dicline)){
+				printf("%s: %s \n",jumble, dic);
+			}
+
+		}
+	}
+
 
 }
 
@@ -34,7 +46,7 @@ int main(int argc, char const *argv[])
 	char *jname = argv[2];
 
 	FILE *d = fopen(dname,"r");
-	FILE *j = fopen(jname,"r");2
+	FILE *j = fopen(jname,"r");
 
 	char jum[21];
 	char dic[31];
