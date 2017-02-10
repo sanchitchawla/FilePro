@@ -16,10 +16,14 @@ void go(FILE* d, FILE* j, char* jum,char* dic , char* dic2 ){
 	 
 	while (fgets(jum, 20, j)!=NULL){
 
-		jlen = strlen(jum) -1;
+		jlen = strlen(jum) - 1;
 
 		if (jum[jlen] == '\n'){
 			jum[jlen] = '\0';
+		}
+		else{
+			jlen++;
+
 		}
 
 		printf("%s:",jum);
@@ -27,24 +31,32 @@ void go(FILE* d, FILE* j, char* jum,char* dic , char* dic2 ){
 		int count = 0;
 
 		while (fgets(dic, 30, d)!=NULL){
-
 			dlen = strlen(dic) - 1;
 
 			if (dic[dlen] == '\n'){
 				dic[dlen] = '\0';
 			}
+			else{
+				dlen++;
+			}
 
-			strcpy(dic2, dic);
-			qsort(dic, strlen(dic), sizeof(char), cmpstringp);
 
-			if (strcmp(dic, jum)==0){
-				printf(" %s", dic2);
-				count++;
+
+			if (dlen==jlen){
+				strcpy(dic2, dic);
+				qsort(dic, strlen(dic), sizeof(char), cmpstringp);
+
+				if (strcmp(dic, jum)==0){
+					printf(" %s", dic2);
+					count++;
+
+				}
 
 			}
 
+			
+
 			if (dic==NULL){
-				printf("done\n");
 				break;
 			}
 			
