@@ -20,3 +20,4 @@ int insertFront(linkedlist* l, void *data);
 int removeFront(linkedlist* l, void **data);
 int insertBack(linkedlist* l, void *data);
 int removeBack(linkedlist* l, void **data);
+int destroyList(linkedlist *l);
