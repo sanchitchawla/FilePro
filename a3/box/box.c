@@ -14,13 +14,11 @@ void createBox(Box **b, int init_cap) {
 }
 
 void insert(Box *b, int elem) {
-
-	int cap = b->cap;
 	int size = b->size;
 
-    if (size==cap){
+    if (size==b->cap){
     	b-> cap  = (b->cap)* 2;
-    	b-> data =(int *)realloc(b->data, sizeof(int)* cap); 
+    	b-> data =(int *)realloc(b->data, sizeof(int) * b->cap); 
 
     }
     *((b->data)+(b->size)) = elem;
@@ -32,9 +30,9 @@ void removeAll(Box *b, int elem) {
 
 	
     for (int i = 0; i < b->size; i++){
-        if ((*(b->data) + i) == elem){
+        if (*((b->data) + i) == elem){
             for (int j = i; j < b->size -1; j++){
-                (*(b->data) + j) = (*(b->data) + (j - 1));
+                *((b->data) + j) = *((b->data) + (j + 1));
             }
             b->size -= 1;
             i--;
@@ -45,28 +43,26 @@ void removeAll(Box *b, int elem) {
 
 void printBox(Box *b) {
 
-	for (int i = 0; i < size; i++){
-		printf("%d\n", data[i]);
+	for (int i = 0; i < b->size; i++){
+		printf("%d\n", *((b->data)+i));
 	}
     
 }
 
 double getMean(Box *b) {
-    int data = b->data;
-	int size = b->size;
 
 	double sum = 0;
 
-	for (int i = 0; i < size; i++){
-		sum+= data[i];
+	for (int i = 0; i < b->size; i++){
+		sum+= *((b->data)+i);
 	}
 
-	return sum / size;
+	return sum / b->size;
 }
 
 void dealloc(Box **b) {
 
-	free(*(b)->data);
+	free((*b)->data);
     free(*b);
 
 }
