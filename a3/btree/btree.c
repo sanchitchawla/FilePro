@@ -1,29 +1,92 @@
-/* Name:
- * ID:
+/* Name: Sanchit Chawla
+ * ID: 5780642
  */
 #include <stdlib.h>
 #include <stdio.h>
 #include "btree.h"
 
 void insert(Node **tree, int val) {
+
+	Node* t = (Node*)malloc(sizeof(Node));
+	t->data = val;
+	t->left  = NULL;
+	t->right = NULL;
     
 	if (!(*tree)){
 		*tree = (Node *)malloc(sizeof(Node));
-		(*tree)->data = (int *)malloc(sizeof(int));
+		(*tree)->data = (int)malloc(sizeof(int));
+		(*tree) = t;
+	}
+
+
+	else{
+
+		if ((*tree)->right != NULL){
+
+			(*tree)->right = t;
+
+		}
+		
+		else if ((*tree)->left != NULL){
+
+			(*tree)->left = t;
+
+		}
+
 	}
 
 }
 
 void print(Node *tree) {
-    // IMPLEMENT
+
+	printf("%d\n", tree->data);
+
+	Node* left  = tree->left;
+	Node* right = tree->right;
+	
+	while (right!=NULL){
+
+		printf("|- %s\n", tree->right);
+
+		print(right);
+	}
+
+	while (left!=NULL){
+		printf("|- %s\n", tree->right);
+		print(left);
+
+	}
+
 }
 
 void delete(Node *tree) {
-    // IMPLEMENT
+    while(tree->left!=NULL){
+    	delete(tree->left);
+    	free(tree->left);
+    	
+    }
+
+    while(tree->right!=NULL){
+    	delete(tree->right);
+    	free(tree->right);
+    }
 }
 
 Node *lookup(Node ** tree, int val) {
-    // IMPLEMENT
+
+	if ((*tree)->data==val){
+		return *tree;
+	}
+	while((*tree)->right!= NULL){
+		lookup((*tree)->right, val);
+	}
+
+	while((*tree)->left!= NULL){
+		lookup((*tree)->left, val);	
+	}
+
+	return NULL;
+
 }
 
 
@@ -50,7 +113,7 @@ int main(int argc, char **argv)
     insert(&root, 2);
     insert(&root, 4);
     insert(&root, 10);
-    insert(&root, 1);
+    insert(&root, 1);	
     insert(&root, 15);
     insert(&root, 12);
     insert(&root, 11);
