@@ -6,7 +6,12 @@
 #include "btree.h"
 
 void insert(Node **tree, int val) {
-    // IMPLEMENT
+    
+	if (!(*tree)){
+		*tree = (Node *)malloc(sizeof(Node));
+		(*tree)->data = (int *)malloc(sizeof(int));
+	}
+
 }
 
 void print(Node *tree) {
@@ -34,6 +39,7 @@ Node *lookup(Node ** tree, int val) {
 Found
 Not Found
  *****************************/
+
 int main(int argc, char **argv)
 {
     Node *root = NULL;

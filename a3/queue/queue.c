@@ -1,5 +1,5 @@
-/* Name:
- * ID:
+/* Name: Sanchit Chawla
+ * ID: 5780642
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,35 +8,50 @@
 #include "queue.h"
 
 void push(Queue **q, char *word) {
+    
     Node* t = (Node*)malloc(sizeof(Node));
-    char* wordcpy= (char*)malloc(sizeof(char)*2);
+    char* wordcpy= (char*)malloc(strlen(word)+ 1);
     strcpy(wordcpy,word);
     t->data = wordcpy;
-    t->next = (*q)->tail;
-    printf("poop\n");
+    t->next = NULL;
 
-    if (!q){
-        printf("in if \n");
+    if (!(*q)){
         *q = (Queue*)malloc(sizeof(Queue));
-        (*q)->head = NULL;
-        (*q)->tail = NULL;
-        printf("outta print\n");
+        (*q)->head = t;
+        (*q)->tail = t;
     }
 
-    (*q)->tail = t;
+    else{
+
+    	(*q)->tail->next = t;		
+
+    	if ((*q)->head == NULL){
+    		(*q)->head = t;
+
+    	}
+
+    	(*q)->tail = t;
+
+
+    }
+
 }
 
 char* pop(Queue *q) {
 
-    if (!q){return NULL;}
+	if (isEmpty(q)){
+		return NULL;
+	}
 
-    /* Node* h = q->head; */
+	Node* m = q->head;
 
-    q-> tail = q-> head;
+	q->head = q->head->next;
 
+	
+	char* p = m->data;
+	free(m);
 
-    q-> head = NULL;
-
+	return p;
 }
 
 void print(Queue *q) {
@@ -46,22 +61,34 @@ void print(Queue *q) {
         return;
     }
 
+    if ((q)->head== NULL){
+    	printf("No items\n");
+    	return;
+    }
+
     Node* nx = q->head;
 
     while (nx->next != NULL){
         printf("%s\n", nx->data);
         nx = nx->next;
+
     }
+    printf("%s\n", nx->data);
 }
 
 int isEmpty(Queue *q) {
-    if (!q){
-        return !0;
+    if (!q || (q)->head== NULL){
+        return 1;
     }
+
+    return 0;
 }
 
 void delete(Queue *q) {
-    // IMPLEMENT
+    while (!isEmpty(q)) {
+       char *item = pop(q);
+       free(item);
+   }
 }
 
 /***** Expected output: *****
@@ -79,6 +106,7 @@ No items
 s = World
 t = Hello
 *****************************/
+
 int main(int argc, char **argv)
 {
     Queue *q = NULL;
@@ -87,7 +115,6 @@ int main(int argc, char **argv)
     print(q);
 
     // push items
-    printf("in main\n");
     push(&q, "a");
     push(&q, "b");
     push(&q, "c");
@@ -95,11 +122,11 @@ int main(int argc, char **argv)
 
     // pop items
     while (!isEmpty(q)) {
+
         char *item = pop(q);
         printf("%s\n", item);
         free(item);
     }
-
     char *item = pop(q);
     assert(item == NULL);
 
