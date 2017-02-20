@@ -13,78 +13,130 @@ void insert(Node **tree, int val) {
 	t->right = NULL;
     
 	if (!(*tree)){
-		*tree = (Node *)malloc(sizeof(Node));
-		(*tree)->data = (int)malloc(sizeof(int));
-		(*tree) = t;
-	}
 
+		(*tree) = t;
+
+	}
 
 	else{
 
-		if ((*tree)->right != NULL){
 
-			(*tree)->right = t;
+		Node* curr = (*tree);
+		Node* child;
 
-		}
-		
-		else if ((*tree)->left != NULL){
+		while(1){
 
-			(*tree)->left = t;
+
+			if (val > curr->data){
+
+				child = curr->right;
+				
+
+				if (curr->right==NULL){
+					curr->right = t;
+					break;	
+				}
+				curr = child;
+				
+
+			}
+			
+			else if (val < curr->data){
+				child = curr->left;
+				
+				if (curr->left==NULL){
+					curr->left = t;	
+					break;
+				}
+				curr = child;
+				
+
+			}
 
 		}
 
 	}
 
 }
+
+void helpmeprint(Node *tree, int deep){
+
+
+	if (tree==NULL){
+		return;
+	}
+
+	for (int i = 0; i < deep -1; i++){
+		printf("  ");
+	}
+
+	printf("|-");
+	printf("%d\n", tree->data);
+	helpmeprint(tree->left,deep+1);
+	helpmeprint(tree->right,deep+1);
+	
+
+
+}
+
 
 void print(Node *tree) {
 
 	printf("%d\n", tree->data);
 
-	Node* left  = tree->left;
-	Node* right = tree->right;
+	if (!tree){
+		return;
+	}
+	helpmeprint(tree->left, 1);
+	helpmeprint(tree->right, 1);
 	
-	while (right!=NULL){
-
-		printf("|- %s\n", tree->right);
-
-		print(right);
-	}
-
-	while (left!=NULL){
-		printf("|- %s\n", tree->right);
-		print(left);
-
-	}
 
 }
 
-void delete(Node *tree) {
-    while(tree->left!=NULL){
-    	delete(tree->left);
-    	free(tree->left);
-    	
-    }
 
-    while(tree->right!=NULL){
-    	delete(tree->right);
-    	free(tree->right);
+
+
+void delete(Node *tree) {
+
+	if (tree==NULL){
+		return;
+	}
+
+    if (tree->left){
+    	delete(tree->left);
     }
+    if(tree->right){
+    	delete(tree->right);
+    }
+    free(tree);
 }
 
 Node *lookup(Node ** tree, int val) {
 
-	if ((*tree)->data==val){
-		return *tree;
-	}
-	while((*tree)->right!= NULL){
-		lookup((*tree)->right, val);
-	}
+	Node* curr = (*tree);
+	Node* child;
 
-	while((*tree)->left!= NULL){
-		lookup((*tree)->left, val);	
-	}
+	while(1){
 
+		if (val > curr->data){
+			if (curr->right==NULL){
+				return NULL;
+			}
+			child = curr->right;
+			curr = child;
+		}
+		else if (val < curr->data){
+			if (curr->left==NULL){
+				return NULL;
+			}
+			child = curr->left;
+			curr = child;
+		}
+		if (curr->data==val){
+			return curr;
+		}
+
+	}
 	return NULL;
 
 }
