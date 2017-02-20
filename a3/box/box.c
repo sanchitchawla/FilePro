@@ -28,14 +28,13 @@ void insert(Box *b, int elem) {
 
 void removeAll(Box *b, int elem) {
 
-	
     for (int i = 0; i < b->size; i++){
         if (*((b->data) + i) == elem){
             for (int j = i; j < b->size -1; j++){
                 *((b->data) + j) = *((b->data) + (j + 1));
             }
             b->size -= 1;
-            i--;
+            i--; /* still check for each element */
         }
     }
     
@@ -107,7 +106,7 @@ int main(int argc, char **argv)
 
     createBox(&b1, 1);
     createBox(&b2, 2);
-
+    
     int n;
     scanf("%d", &n);
     for (int i=0; i<n; i++) {
