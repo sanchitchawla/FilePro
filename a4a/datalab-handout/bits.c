@@ -213,7 +213,28 @@ int implication(int x, int y) {
  *   Rating: 4
  */
 int bitCount(int x) {
-  	return 2;
+
+	int y = 0x55 + (0x55 << 8);
+    int mask = y + (y << 16);
+
+    x = (x & mask) + ((x >> 1) & mask);
+    y = 0x33 + (0x33 << 8);
+
+    mask = y + (y << 16);
+    x = (x & mask) + ((x >> 2) & mask);
+    
+    y = 0xf + (0xf << 8);
+    
+    mask = y + (y << 16);
+    x = (x & mask) + ((x >> 4) & mask);
+    
+    mask = 0xff + (0xff << 16);
+    x = (x & mask) + ((x >> 8) & mask);
+    
+    mask = 0xff + (0xff << 8);
+    x = (x & mask) + ((x >> 16) & mask);
+    
+    return x;
 }
 /* 
  * bang - Compute !x without using !
@@ -303,7 +324,6 @@ int isLessOrEqual(int x, int y) {
 	int min = 1 << 31;
 	int xL = min & x;
 	int yL = min & y;
-
 	int LL = xL ^ yL;
 
 	LL = (LL >> 31) & 1;
