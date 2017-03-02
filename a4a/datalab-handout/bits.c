@@ -239,7 +239,6 @@ int bang(int x) {
 int logicalShift(int x, int n) {
 	int fin = ((1 << 31) >> n) << 1;
 	int y = (x>>n);
-	printf("%d\n", fin);
   	return y & ~fin;
 }
 /* 
@@ -296,8 +295,19 @@ int tmin(void) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-	printf("huehue\n");
 
 
-  	return 2;
+	int sign = y + (~x + 1); // y - x
+	int check = (sign >>31)&1; // if y - x = -
+	
+	int min = 1 << 31;
+	int xL = min & x;
+	int yL = min & y;
+
+	int LL = xL ^ yL;
+
+	LL = (LL >> 31) & 1;
+	x = x>>31;
+	return (LL & x) | (!check & !LL);
+	
 }
