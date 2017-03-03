@@ -7,7 +7,7 @@
 
 enum name {RAX, RCX, RDX, RBX, RSP,RBP,RSI,RDI};
 
-char* peter[] = {"1","2","4","8"}; 
+char* sca[] = {"1","2","4","8"}; 
 
 void print(char raw_instr){
 
@@ -41,8 +41,6 @@ void print(char raw_instr){
 }
 
 
-
-
 void disassemble(const unsigned char* raw_instr){
 
 	if (raw_instr[0]== 0x68){
@@ -50,7 +48,7 @@ void disassemble(const unsigned char* raw_instr){
 		for (int i = 0;i < 5; i++){
 			printf("%.2x ", raw_instr[i]);
 		}
-		printf("\tpushq $0x%0x\n", *(int*)&raw_instr[1]);
+		printf("\tpushq $%#x\n", *(int*)&raw_instr[1]);
 
 	}
 	else if (raw_instr[0]<=0x57){
@@ -82,7 +80,7 @@ void disassemble(const unsigned char* raw_instr){
 		printf(",");
 		print(raw_instr[2]>>3);
 		char t = (raw_instr[2] & mask3)>>6;
-		printf(",%s)\n", peter[t]);
+		printf(",%s)\n", sca[t]);
 
 	}
 
