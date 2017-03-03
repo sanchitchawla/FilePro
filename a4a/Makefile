@@ -1,8 +1,9 @@
 all: disasTest
 
-disasTest: disas
+disasTest: disas.o disasTest.c
 	gcc disas.o disasTest.c -o disasTest
-disas:
+
+disas.o: disas.c
 	gcc disas.c -c
 
 clean:

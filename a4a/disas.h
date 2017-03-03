@@ -1,1 +1,1 @@
-void disassemble(const unsigned char* l);
+void disassemble(const unsigned char* raw_instr);
