@@ -9,11 +9,37 @@
 #include <string.h>
 #include <stdio.h>
 
+struct Line
+{
+	int valid;
+	int tag;
+	int bytes:
+	int b;
+	char* cacheme;
+};
+
+struct Set
+{
+	int numoflines;
+	Line *lines;
+	
+};
 
 void strcp(char **t, char *optarg){
 	*t = malloc(sizeof(char) * strlen(optarg) + 1); 
 }
 
+void trace(char* file){
+
+	FILE* f = fopen(file, "r");
+	char lines[256];
+
+	while (fgets(lines, sizeof(lines), f)){
+		printf("%s\n", lines);
+	}
+
+	fclose(f);
+}
 
 void usage(){
 	printf("Usage: ./csim-ref [-hv] -s <num> -E <num> -b <num> -t <file>\n");
@@ -31,7 +57,9 @@ void usage(){
 
 void minput(int s, int E, int b, char *t, int h, int v){
 
-
+	if (h == 1){
+		usage();
+	}
 
 	if (s == -1 || b == -1 || E == -1 || t == NULL){
 
@@ -115,7 +143,17 @@ int main()
         }
     }
 
-    printSummary(0, 0, 0);
+    minput(s, E, b, t, h ,v);
+
+    if (access(t, F_OK) == -1){
+    	printf("%s: No such file or directory\n", t);
+    	exit(EXIT_FAILURE);
+    }
+
+    if (v == 1){
+    	trace(t);
+    }
+
     return 0;
 }
  
