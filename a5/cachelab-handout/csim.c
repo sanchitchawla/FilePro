@@ -9,11 +9,16 @@
 #include <string.h>
 #include <stdio.h>
 
+
+typedef struct Line Line;
+typedef struct Set Set;
+
+
 struct Line
 {
 	int valid;
 	int tag;
-	int bytes:
+	int bytes;
 	int b;
 	char* cacheme;
 };
@@ -25,9 +30,16 @@ struct Set
 	
 };
 
-void strcp(char **t, char *optarg){
-	*t = malloc(sizeof(char) * strlen(optarg) + 1); 
-}
+struct Cache
+{
+	int S;
+	int s;
+	int E;
+	int B;
+	int b;
+	set* sets;
+};
+
 
 void trace(char* file){
 
@@ -63,7 +75,8 @@ void minput(int s, int E, int b, char *t, int h, int v){
 
 	if (s == -1 || b == -1 || E == -1 || t == NULL){
 
-		int ne, ns, nt, nb, tots = 0;
+		int ne = 0; int ns = 0; int nt = 0;
+		int nb = 0; int tots = 0;
 
 		if (s == -1){
 			tots++;
@@ -111,18 +124,63 @@ void minput(int s, int E, int b, char *t, int h, int v){
 
 }
 
-int main()
+void setmem(Set **sets, int E, int b, int s){
+
+	int ps = pow(2, s);
+	int pb = pow(2, b);
+	*sets = (Set *)malloc(ps * sizeof(Set));
+
+	for (int i = 0; i < ps; i++){
+
+		(*sets[i]).numoflines = E;
+		(*sets[i]).lines = (Line*)malloc(E* sizeof(Line));
+
+		for (int k = 0; i < E; k++){
+			(*sets[i]).lines[k].valid = 0;
+			(*sets[i]).lines[k].tag = 0;
+			(*sets[i]).lines[k].bytes = pb;
+			(*sets[i]).lines[k].b = b;
+			(*sets[i]).lines[k].cacheme = (char*)malloc(pb* sizeof(char));
+		}
+	}
+
+}
+
+void freemem(Set **sets, int E, int b, int s){
+	// Free Everything you malloc
+
+	int ps = pow(2,s);
+	
+	for (int i = 0;i < ps; i++){
+		for (int k = 0; k < E; k++){
+
+			(*sets[i]).lines[k].valid = 0;
+			(*sets[i]).lines[k].tag = 0;
+			(*sets[i]).lines[k].bytes = 0;
+			(*sets[i]).lines[k].b = 0;
+			free((*sets[i]).lines[k].cacheme);
+
+		}
+
+		(*sets[i]).numoflines = 0;
+		free((*sets[i]).lines);
+	}
+	free(*sets);
+}
+
+
+int main(int argc, char **argv)
 {
 
-	int s, E, b, h, v, op;
-	char *t;
-	op = 0;
-	s = -1;
-	E = -1;
-	b = -1;
-	h = -1;
-	v = -1;
-	t = NULL;
+	int op = 0;
+	int s = -1;
+	int E = -1;
+	int b = -1;
+	int h = -1;
+	int v = -1;
+	char* t = NULL;
+
+	Cache cuch = (Cache)malloc(sizeof(Cache));
 
 	while ((op = getopt(argc, argv,"hvs:E:b:t:")) != -1) {
         switch (op) {
@@ -132,7 +190,7 @@ int main()
 				break;
 			case 'b' : b = atoi(optarg); 
 				break;
-			case 't' : strcp(&t,optarg);
+			case 't' : t = optarg;
 				break;
 			case 'h' : h = 1;
 				break;
@@ -150,9 +208,17 @@ int main()
     	exit(EXIT_FAILURE);
     }
 
+    else{
+    	cuch.
+    	setmem(cuch.sets, E, b, s);
+    }
+
     if (v == 1){
     	trace(t);
     }
+
+
+
 
     return 0;
 }
