@@ -12,20 +12,19 @@
 
 typedef struct Line Line;
 typedef struct Set Set;
+typedef struct Cache Cache;
 
 
 struct Line
 {
 	int valid;
-	int tag;
-	int bytes;
-	int b;
-	char* cacheme;
+	long long tag;
+	int lastUsed;
+	char* byte;
 };
 
 struct Set
 {
-	int numoflines;
 	Line *lines;
 	
 };
@@ -37,21 +36,13 @@ struct Cache
 	int E;
 	int B;
 	int b;
-	set* sets;
+	Set* sets;
+
+	int evicts;
+	int misses;
+	int  hits; 
 };
 
-
-void trace(char* file){
-
-	FILE* f = fopen(file, "r");
-	char lines[256];
-
-	while (fgets(lines, sizeof(lines), f)){
-		printf("%s\n", lines);
-	}
-
-	fclose(f);
-}
 
 void usage(){
 	printf("Usage: ./csim-ref [-hv] -s <num> -E <num> -b <num> -t <file>\n");
@@ -124,75 +115,170 @@ void minput(int s, int E, int b, char *t, int h, int v){
 
 }
 
-void setmem(Set **sets, int E, int b, int s){
+int evict(Set set, Cache cuch, int* UL){
 
-	int ps = pow(2, s);
-	int pb = pow(2, b);
-	*sets = (Set *)malloc(ps * sizeof(Set));
+	int numlines = cuch.E;
+	int minUsedi = 0;
+	int maxU = set.lines->lastUsed;
+	int minU = set.lines->lastUsed;
+	Line line;
+
+	for (int i = 1; i < numlines; i++){
+
+		line = set.lines[i];
+
+		if (minU > line.lastUsed){
+			minUsedi = i;
+			minU = line.lastUsed;
+		}
+
+		if (maxU < line.lastUsed){
+			maxU = line.lastUsed;
+		}
+
+	}
+
+	UL[0] = minU;
+	UL[1] = maxU;
+	return minUsedi;
+}
+
+int emptyLine(Set set, Cache cuch){
+
+	int numlines = cuch.E;
+	Line line;
+
+	for (int i = 0; i < numlines; i++){
+		line = set.lines[i];
+
+		if (line.valid == 0){
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+void setmem(Cache** cuch, int E, int ps){
+
+	((*cuch)->sets) = (Set *)malloc(ps * sizeof(Set));
 
 	for (int i = 0; i < ps; i++){
 
-		(*sets[i]).numoflines = E;
-		(*sets[i]).lines = (Line*)malloc(E* sizeof(Line));
+		(*cuch)->sets[i].lines = (Line*)malloc(ps* sizeof(Line));
 
-		for (int k = 0; i < E; k++){
-			(*sets[i]).lines[k].valid = 0;
-			(*sets[i]).lines[k].tag = 0;
-			(*sets[i]).lines[k].bytes = pb;
-			(*sets[i]).lines[k].b = b;
-			(*sets[i]).lines[k].cacheme = (char*)malloc(pb* sizeof(char));
+		for (int k = 0; k < E; k++){
+			(*cuch)->sets[i].lines[k].lastUsed = 0;
+			(*cuch)->sets[i].lines[k].valid = 0;
+			(*cuch)->sets[i].lines[k].tag   = 0;
+
 		}
+
 	}
 
 }
 
-void freemem(Set **sets, int E, int b, int s){
+void freemem(Cache** cuch, int E, int ps){
 	// Free Everything you malloc
-
-	int ps = pow(2,s);
 	
 	for (int i = 0;i < ps; i++){
 		for (int k = 0; k < E; k++){
 
-			(*sets[i]).lines[k].valid = 0;
-			(*sets[i]).lines[k].tag = 0;
-			(*sets[i]).lines[k].bytes = 0;
-			(*sets[i]).lines[k].b = 0;
-			free((*sets[i]).lines[k].cacheme);
+			(*cuch)->sets[i].lines[k].valid = 0;
+			(*cuch)->sets[i].lines[k].tag   = 0;
+			(*cuch)->sets[i].lines[k].lastUsed = 0;
 
 		}
 
-		(*sets[i]).numoflines = 0;
-		free((*sets[i]).lines);
+		free((*cuch)->sets[i].lines);
 	}
-	free(*sets);
+	free((*cuch)->sets);
 }
 
+Cache* sim(Cache* cuch, unsigned long long address) {
+	
+	int cache_full = 1;
+	int num_lines = cuch->E;
+	int prev_hits = cuch->hits;
+	int tag_size = (64 - (cuch->s + cuch->b));
+	unsigned long long input = address >> (cuch->s + cuch->b);
+	unsigned long long temp = address << (tag_size);
+	unsigned long long setIndex = temp >> (tag_size + cuch->b);
+	Set query_set = cuch->sets[setIndex];
+
+	for (int i = 0; i < num_lines; i++){
+
+		Line line = query_set.lines[i];
+
+		//printf("valid %d tag %lld input%lld %d \n", line.valid, line.tag, input, i);
+
+		if (line.valid){
+			if (line.tag == input){
+				line.lastUsed++;
+				cuch->hits++;
+				query_set.lines[i] = line;
+			}
+
+		}
+
+		else if (!(line.valid) && cache_full){
+				cache_full = 0;
+		}
+
+	}
+
+	if (prev_hits == cuch->hits){
+		cuch->misses++;
+	}
+	else{
+		return cuch;
+	}
+
+	int* UL = (int*)malloc(2* sizeof(int));
+	int minUsedi = evict(query_set, *cuch, UL); 
+
+	if (cache_full){
+		cuch->evicts++;
+		query_set.lines[minUsedi].tag = input;	
+		query_set.lines[minUsedi].lastUsed   = UL[1] + 1;
+
+	}
+
+	else{
+		int EI = emptyLine(query_set, *cuch);
+		query_set.lines[EI].tag   = input;
+		query_set.lines[EI].valid = 1;
+		query_set.lines[EI].lastUsed = UL[1] + 1;
+
+	}
+	free(UL);
+
+	return cuch;
+
+}
 
 int main(int argc, char **argv)
 {
 
 	int op = 0;
-	int s = -1;
-	int E = -1;
-	int b = -1;
 	int h = -1;
 	int v = -1;
 	char* t = NULL;
 
-	Cache cuch = (Cache)malloc(sizeof(Cache));
+	Cache* cuch = (Cache*)malloc(sizeof(Cache));
 
 	while ((op = getopt(argc, argv,"hvs:E:b:t:")) != -1) {
         switch (op) {
-            case 's' : s = atoi(optarg);
+            case 's' : cuch->s = atoi(optarg);
                 break;
-			case 'E' : E = atoi(optarg);
+			case 'E' : cuch->E = atoi(optarg);
 				break;
-			case 'b' : b = atoi(optarg); 
+			case 'b' : cuch->b = atoi(optarg); 
 				break;
 			case 't' : t = optarg;
 				break;
-			case 'h' : h = 1;
+			case 'h' : usage();
+				exit(2);
 				break;
 			case 'v' : v = 1;
 				break;
@@ -201,25 +287,50 @@ int main(int argc, char **argv)
         }
     }
 
-    minput(s, E, b, t, h ,v);
+    minput(cuch->s, cuch->E, cuch->b, t, h ,v);
 
     if (access(t, F_OK) == -1){
     	printf("%s: No such file or directory\n", t);
     	exit(EXIT_FAILURE);
     }
 
-    else{
-    	cuch.
-    	setmem(cuch.sets, E, b, s);
+    int ps = pow(2,cuch->s);
+    setmem(&(cuch), cuch->E, ps);
+
+    FILE* read = fopen(t,"r");
+
+    unsigned long long addr;
+    unsigned int size;
+    char cmd;
+
+    cuch->hits   = 0;
+    cuch->evicts = 0;
+    cuch->misses = 0;
+    while(!feof(read)){
+    	if (fscanf(read, " %c %llx,%d", &cmd, &addr, &size) == 3){
+    		switch(cmd){
+    			case 'I' : 
+    				break;
+    			case 'L': 
+    				cuch = sim(cuch, addr);
+    				break;
+    			case 'S' : 
+    				cuch = sim(cuch, addr);
+    				break;
+    			case 'M' : 
+    				cuch = sim(cuch, addr);
+    				cuch = sim(cuch, addr);
+    				break;
+    			default:
+    				break;
+    		}
+    	}
+
     }
 
-    if (v == 1){
-    	trace(t);
-    }
-
-
-
+    printSummary(cuch->hits, cuch->misses, cuch->evicts);
+    freemem(&(cuch),cuch->E, cuch->s);
+    fclose(read);
 
     return 0;
 }
- 
