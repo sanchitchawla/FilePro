@@ -1,3 +1,7 @@
+/* Name : Sanchit Chawla
+   ID   : 5780642
+*/
+
 /* 
  * trans.c - Matrix transpose B = A^T
  *
@@ -20,8 +24,66 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
  *     be graded. 
  */
 char transpose_submit_desc[] = "Transpose submission";
-void transpose_submit(int M, int N, int A[N][M], int B[M][N])
-{
+void transpose_submit(int M, int N, int A[N][M], int B[M][N]){
+
+    int diag;
+    int tempvalue;
+    int incre;
+
+    if (N == 32 || N == 64){
+
+        if (N == 32){
+            incre = 8;
+        }
+        else{
+            incre = 4;
+        }
+
+        for (int c = 0; c < N; c+=incre){
+                for (int r = 0; r < N; r+=incre){
+                    for (int i = r; i < r + incre; i++){
+                        for (int j = c; j < c + incre; j++){
+                            if (i != j){
+                                B[j][i] = A[i][j];
+                            }
+                            else{
+                                tempvalue = A[i][j];
+                                diag = i;
+                            }
+                        }
+                        if (r == c){
+                            B[diag][diag] = tempvalue;
+                        }
+                    }
+                }
+            }
+
+    }
+    else{
+
+        incre = 16;
+
+        for (int c = 0; c < M; c+=incre){
+            for (int r = 0; r < N; r+=incre){
+                for (int i = r; (i < r + incre) && (i < N); i++){
+                    for (int j = c; (j < c + incre) && (j < M); j++){
+                        if (i != j){
+                            B[j][i] = A[i][j];
+                        }
+                        else{
+                            tempvalue = A[i][j];
+                            diag = i;
+                        }
+                    }
+
+                    if (r == c){
+                        B[diag][diag] = tempvalue;
+                    }
+
+                }
+            }
+        }
+    }
 }
 
 /* 
@@ -59,7 +121,7 @@ void registerFunctions()
     registerTransFunction(transpose_submit, transpose_submit_desc); 
 
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc); 
+    //registerTransFunction(trans, trans_desc); 
 
 }
 
