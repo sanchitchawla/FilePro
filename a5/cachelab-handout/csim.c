@@ -43,6 +43,7 @@ struct Cache
 	int  hits; 
 };
 
+int v;
 
 void usage(){
 	printf("Usage: ./csim-ref [-hv] -s <num> -E <num> -b <num> -t <file>\n");
@@ -58,62 +59,6 @@ void usage(){
 	printf("  %s\n", "linux>  ./csim-ref -v -s 8 -E 2 -b 4 -t traces/yi.trace");
 }
 
-void minput(int s, int E, int b, char *t, int h, int v){
-
-	if (h == 1){
-		usage();
-	}
-
-	if (s == -1 || b == -1 || E == -1 || t == NULL){
-
-		int ne = 0; int ns = 0; int nt = 0;
-		int nb = 0; int tots = 0;
-
-		if (s == -1){
-			tots++;
-			ns = 1;
-		}
-		if (b == -1){
-			tots++;
-			nb = 1;
-		}
-		if (t!=NULL){
-			free(t);
-		}
-		else{
-			tots++;
-			nt = 1;
-		}
-
-		if (tots > 1){
-			printf("Missing required command line argument\n");
-		}
-		else if(tots == 1){
-			printf("%s\n", t);
-			printf("Options require an argument --");
-			if (ns == 1){
-				printf("\'%c\'", 's');
-			}
-			else if (ne == 1){
-				printf("\'%c\'", 'E');
-			}
-			else if (nb == 1){
-				printf("\'%c\'", 'b');
-			}
-			else if (nt == 1){
-				printf("\'%c\'", 't');
-			}
-		}
-
-		if (h != 1){
-			usage();
-		}
-	exit(EXIT_FAILURE);
-
-	}
-
-
-}
 
 int evict(Set set, Cache cuch, int* UL){
 
@@ -261,8 +206,6 @@ int main(int argc, char **argv)
 {
 
 	int op = 0;
-	int h = -1;
-	int v = -1;
 	char* t = NULL;
 
 	Cache* cuch = (Cache*)malloc(sizeof(Cache));
@@ -278,7 +221,7 @@ int main(int argc, char **argv)
 			case 't' : t = optarg;
 				break;
 			case 'h' : usage();
-				exit(2);
+				exit(1);
 				break;
 			case 'v' : v = 1;
 				break;
@@ -287,7 +230,12 @@ int main(int argc, char **argv)
         }
     }
 
-    minput(cuch->s, cuch->E, cuch->b, t, h ,v);
+
+    if (cuch->s == 0 || cuch->b == 0 || cuch->E == 0 || t == NULL){
+    	printf("%s: Missing required command line argument\n", argv[0]);
+    	usage();
+    	exit(1);
+    }
 
     if (access(t, F_OK) == -1){
     	printf("%s: No such file or directory\n", t);
