@@ -9,14 +9,8 @@
 
 /* initialize the internal structure of a linked list */
 void init(LinkedList *l) {
-    
-    Node* h = (Node*)malloc(sizeof(Node));
-    h->data = (int)malloc(sizeof(int));
-
-    l = (LinkedList)malloc(sizeof(LinkedList));
-    l->head = h;
-    l-> count = (int)malloc(sizeof(int));
-    l->count=0;
+    l->head  = NULL;
+    l->count = 0;
 
 }
 
@@ -24,72 +18,30 @@ void init(LinkedList *l) {
  * Returns FAILED if anything goes wrong, and SUCCESS otherwise.
  */
 int insertAtIndex(LinkedList *l, int idx, int x) {
-
-
-    if (idx > count){
+    if (idx > l->count){
         return FAILED;
     }
 
-    // LinkedList proc = (LinkedList)malloc(sizeof(LinkedList));
-    // proc->head = l->head;
-    // proc-> count = (int)malloc(sizeof(int));
-    // proc->count = 0;
+    Node* curr = l->head; // Temp
+    Node* insert = (Node*)malloc(sizeof(Node));
+    insert->data = x;
+    insert->next = NULL;
 
-    // starts here 
-    
-    Node* d = (Node*)malloc(sizeof(Node));
-    d->data = (int)malloc(sizeof(int));
-    d->data = x;
-
-    Node* h = l->head;
-
-    // int c =0;
-
-    // while(head->next!=NULL){
-
-    //     Node* dummy = head->next;
-
-    //     if (idx==c){
-
-    //         dummy->next = dummy;
-    //         dummy = d;
-    //         // Point the current node to the next
-    //         //Put in a node 
-    //     }
-
-    //     c++;
-
-    //     dummy = dummy->next;
-
-    // }
-
-    // l->count= l->count + 1;
-
-    int c =0;
-
-    Node* insert;
-
-    while(h->next!=NULL){
-
-
-        if (c==idx){
-            insert = d;
-            while(h->next!=NULL){
-                h->next = h;    
-            }
-
-            h = insert;
-            return SUCCESS;
-        }
-
-        h = h->next;
-        c++;
-
+    if (idx == 0){
+        insert->next = l->head;
+        l->head = insert;
+        l->count +=1;
+        return SUCCESS;
     }
 
+    for (int i = 0;i < idx -1; i++){
+        curr = curr->next;  
+    }
 
-    return FAILED;
-
+    insert->next = curr->next;
+    curr->next = insert;
+    l->count = (l->count) +1;
+    return SUCCESS;
 
 }
 
@@ -99,39 +51,29 @@ int insertAtIndex(LinkedList *l, int idx, int x) {
  */
 int removeAtIndex(LinkedList *l, int idx, int *x) {
 
-    if (idx > count){
-        return FAILED;
+    if (idx > l->count){return FAILED;}
+
+    if (!x) return FAILED;
+    Node* curr = l->head; // Temp
+    Node* temp;
+
+    if (idx == 0){
+        temp = curr->next;
+        *x = curr->data;
+        l->head = temp;
+        free(curr);
+        l->count -= 1;
+        return SUCCESS;
     }
-    
-
-    Node* h = l->head;
-
-    int c =0;
-
-
-    while(h->next!=NULL){
-
-        if (c==idx){
-
-            while(h->next->!=NULL){
-
-                if (x!=NULL){
-                    x = h->data;
-                }
-                h = h->next;  
-
-            }
-        }
-
-
-        h = h->next;
-        c++;
-
+    for (int i = 0; i < idx -1; i++){
+        curr = curr->next;
     }
-
-
+    temp = curr->next->next;
+    *x = curr->next->data;
+    free(curr->next);
+    curr->next = temp;
+    l->count-=1;
     return SUCCESS;
-
 }
 
 /* Completely deallocates a linked list.
@@ -140,17 +82,18 @@ int removeAtIndex(LinkedList *l, int idx, int *x) {
  * HINT: Call removeAtIndex() repeatedly.
  */
 void destroy(LinkedList *l) {
-    
-    free(l->head);
-    free(l->count);
-    free(l);
+    int a =0;
+    while (l->count > 0){
+        removeAtIndex(l, 0,&a);
+    }
+
 }
 
 /* Prints out the current list */
 void printList(LinkedList *l) {
     printf("LIST> ");
     Node *ptr = l->head;
-    while (ptr != NULL) {
+    while (ptr!= NULL) {
         printf("%d ", ptr->data);
         ptr = ptr->next;
     }
