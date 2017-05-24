@@ -12,7 +12,7 @@
  * This is the default path where the driver will look for the
  * default tracefiles. You can override it at runtime with the -t flag.
  */
-#define TRACEDIR "/courses/filepro-t2-2016/malloc_traces/"
+#define TRACEDIR "/home/sanchit/Desktop/FilePro/a6/malloc_traces/"
 
 /*
  * This is the list of default tracefiles in TRACEDIR that the driver

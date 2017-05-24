@@ -1,27 +1,18 @@
 /*
- * mm-naive.c - The fastest, least memory-efficient malloc package.
- * 
- * In this naive approach, a block is allocated by simply incrementing
- * the brk pointer.  A block is pure payload. There are no headers or
- * footers.  Blocks are never coalesced or reused. Realloc is
- * implemented directly using mm_malloc and mm_free.
- *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
+	So I implemented a Segregrated Free list malloc.
+	Each block has a header and footer
+	All free blocks contain pointers to prev and next free block
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
-
 #include "mm.h"
 #include "memlib.h"
 
-/*********************************************************
- * NOTE TO STUDENTS: Before you do anything else, please
- * provide your team information in the following struct.
- ********************************************************/
+
 team_t team = {
     /* Team name */
     "SunnyisKewl",
@@ -46,7 +37,7 @@ team_t team = {
 #define DSIZE     8          
 #define INITCHUNKSIZE (1<<6)
 #define CHUNKSIZE (1<<12)
-#define REALLOC_BUFFER  (1<<7)    
+#define REALLOCBUFF  (1<<7)    
 #define MAX(x, y) ((x) > (y) ? (x) : (y)) 
 #define MIN(x, y) ((x) < (y) ? (x) : (y)) 
 #define PACK(size, alloc) ((size) | (alloc))
@@ -69,27 +60,35 @@ team_t team = {
 #define SUCC(ptr) (*(char **)(SUCC_PTR(ptr)))
 
 
-void* seglist[20];
+void* seglist[10];
+
+void* extendheap(size_t size);
+void* coalesce(void *ptr);
+void* place(void *ptr, size_t blocksize);
+void insert(void *ptr, size_t size);
+void delete(void *ptr);
 
 /* 
  * mm_init - initialize the malloc package.
+ 	Allocating the heap area
  */
 int mm_init(void){
 
-	char* start;
+	char* first;
 
-	for (int i = 0; i < 20; i++){
+	// Initialize the list 
+	for (int i = 0; i < 10; i++){
 		seglist[i] = NULL;
 	}
 
-	if ((long)(start = mem_sbrk(WSIZE * 4)) == -1){
+	if ((long)(first = mem_sbrk(WSIZE * 4)) == -1){
 		return -1;
 	}
 
-	PUT_NOTAG(start, 0);
-	PUT_NOTAG(start + WSIZE, PACK(DSIZE , 1));
-	PUT_NOTAG(start + (2 * WSIZE), PACK(DSIZE , 1)); 
-	PUT_NOTAG(start + (3 * WSIZE), PACK(0 , 1));
+	PUT_NOTAG(first, 0);
+	PUT_NOTAG(first + WSIZE, PACK(DSIZE , 1));
+	PUT_NOTAG(first + (2 * WSIZE), PACK(DSIZE , 1)); 
+	PUT_NOTAG(first + (3 * WSIZE), PACK(0 , 1));
 
     return 0;
 }
@@ -97,55 +96,138 @@ int mm_init(void){
 /* 
  * mm_malloc - Allocate a block by incrementing the brk pointer.
  *     Always allocate a block whose size is a multiple of the alignment.
+ 	Returns pointer to an allocated area.
  */
-void *mm_malloc(size_t size)
-{
- //    int newsize = ALIGN(size + SIZE_T_SIZE);
- //    void *p = mem_sbrk(newsize);
- //    if (p == (void *)-1)
-	// return NULL;
- //    else {
- //        *(size_t *)p = size;
- //        return (void *)((char *)p + SIZE_T_SIZE);
- //    }
+void* mm_malloc(size_t size){
+
+    size_t blocksize;    
+    void* ptr = NULL;  
+    int i = 0; 
+    
+    if (size <= DSIZE) {
+        blocksize = 2 * DSIZE;
+    }
+
+    else {
+        blocksize = ALIGN(size + DSIZE);
+    }
+    
+    size_t searchsize = blocksize;
+
+    while (i < 10) {
+
+    	searchsize >>= 1;
+        i++;
+
+        if ((i == 9) || ((searchsize <= 1))) {
+
+            ptr = seglist[i];
+
+            while ((ptr != NULL) && ((blocksize > GET_SIZE(HDRP(ptr))))){
+                ptr = PRED(ptr);
+            }
+
+            if (ptr != NULL){
+                break;
+            }
+        }
+        
+
+    }
+    
+    // extend heap, if no free block
+    if (ptr == NULL) {
+
+        size_t extendsize = MAX(blocksize, CHUNKSIZE);
+        
+        if ((ptr = extendheap(extendsize)) == NULL){
+            return NULL;
+        }
+    }
+    
+    ptr = place(ptr, blocksize);
+    return ptr;
+
 }
 
 /*
- * mm_free - Freeing a block does nothing.
+ * mm_free - Frees the block given to it
  */
-void mm_free(void *ptr)
-{
+void mm_free(void* ptr){
+
+    size_t size = GET_SIZE(HDRP(ptr));
+    REMOVE_RATAG(HDRP(NEXT_BLKP(ptr)));
+    PUT(HDRP(ptr), PACK(size, 0));
+    PUT(FTRP(ptr), PACK(size, 0));
+    insert(ptr, size);
+    coalesce(ptr);
 }
 
 /*
  * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
  */
-void *mm_realloc(void *ptr, size_t size)
-{
-    // void *oldptr = ptr;
-    // void *newptr;
-    // size_t copySize;
+void* mm_realloc(void* ptr, size_t size){
+
+    void* newPtr = ptr;
+    size_t upSize = size;
+
+    if (size <= 0) return NULL;
     
-    // newptr = mm_malloc(size);
-    // if (newptr == NULL)
-    //   return NULL;
-    // copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
-    // if (size < copySize)
-    //   copySize = size;
-    // memcpy(newptr, oldptr, copySize);
-    // mm_free(oldptr);
-    // return newptr;
+    if (upSize <= DSIZE) { upSize = DSIZE * 2; } 
+
+    else { upSize = ALIGN(DSIZE + size); }
+
+    upSize += REALLOCBUFF;
+    
+    int buffer = GET_SIZE(HDRP(ptr)) - upSize;
+
+    if (buffer < 0){
+
+        if (GET_SIZE(HDRP(NEXT_BLKP(ptr))) && GET_ALLOC(HDRP(NEXT_BLKP(ptr)))){
+
+        	newPtr = mm_malloc(upSize - DSIZE);
+            memcpy(newPtr, ptr, MIN(size, upSize));
+            mm_free(ptr);
+
+        } 
+
+        else{
+        	int r = GET_SIZE(HDRP(ptr)) + GET_SIZE(HDRP(NEXT_BLKP(ptr))) - upSize;
+
+        	if (r < 0){
+
+        		int extra = MAX(r, CHUNKSIZE);
+
+            	if (extendheap(extra) == NULL){
+            		return NULL;	
+            	} 
+
+            	r += extra;
+        	}
+
+            
+            delete(NEXT_BLKP(ptr));
+            PUT_NOTAG(HDRP(ptr), PACK(upSize + r, 1)); 
+            PUT_NOTAG(FTRP(ptr), PACK(upSize + r, 1)); 
+        }
+
+    	 buffer = GET_SIZE(HDRP(newPtr)) - upSize;
+    }
+    return newPtr;
+
 }
 
 void insert(void* ptr, size_t size){
-	void* searchin = NULL; // Might need to set to ptr !!!
+
+	void* searchin = NULL;
 	void* insertin = NULL;
 	int each = 0;
 
-	while ((each < 19) && (size > 1)){ /* 19 comes from sizeof(list) -1 */
+	while ((each < 9) && (size > 1)){
 		size >>= 1;
 		each++;
 	} 
+
 	searchin = seglist[each];
 
 	while((searchin != NULL) && (size > GET_SIZE(HDRP(searchin)))){
@@ -158,6 +240,7 @@ void insert(void* ptr, size_t size){
 		SET_PTR(SUCC_PTR(searchin), ptr);	
 		SET_PTR(SUCC_PTR(ptr), insertin);
 		SET_PTR(PRED_PTR(insertin), ptr);
+		seglist[each] = ptr;
 	}
 	else if ((searchin != NULL) && (insertin == NULL)){
 		SET_PTR(PRED_PTR(ptr), searchin);
@@ -169,13 +252,13 @@ void insert(void* ptr, size_t size){
 		SET_PTR(PRED_PTR(ptr), searchin);
 		SET_PTR(SUCC_PTR(ptr), insertin);
 		SET_PTR(PRED_PTR(insertin), ptr);
+		seglist[each] = ptr;
 	}
 	else{
 		SET_PTR(PRED_PTR(ptr), NULL);
 		SET_PTR(SUCC_PTR(ptr), NULL);
 		seglist[each] = ptr;
 	}
-
 
 }
 
@@ -185,12 +268,11 @@ void delete(void* ptr){
 	size_t size = GET_SIZE(HDRP(ptr));
 	int each = 0;
 
-	while ((each < 19) && (size > 1)){ /* 19 comes from sizeof(list) -1 */
+	while ((each < 9) && (size > 1)){ 
 		size >>= 1;
 		each++;
 	}
 
-	/* If there's something before and after */
 	if ((PRED(ptr) != NULL) && (SUCC(ptr) != NULL)){
 		SET_PTR(SUCC_PTR(PRED(ptr)), SUCC(ptr));
 		SET_PTR(PRED_PTR(SUCC(ptr)), PRED(ptr));
@@ -208,31 +290,37 @@ void delete(void* ptr){
 
 }
 
-void* coalesce(void *ptr){
+void* coalesce(void* ptr){
     size_t prev_alloc = GET_ALLOC(HDRP(PREV_BLKP(ptr)));
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t size = GET_SIZE(HDRP(ptr));
     
-    if (GET_TAG(HDRP(PREV_BLKP(ptr))))
+    if (GET_TAG(HDRP(PREV_BLKP(ptr)))){
         prev_alloc = 1;
-
+    }
+    // if both allocated
     if (prev_alloc && next_alloc) {
         return ptr;
     }
+    // if next one not allocated
     else if (prev_alloc && !next_alloc) {
         delete(ptr);
         delete(NEXT_BLKP(ptr));
         size += GET_SIZE(HDRP(NEXT_BLKP(ptr)));
         PUT(HDRP(ptr), PACK(size, 0));
         PUT(FTRP(ptr), PACK(size, 0));
-    } else if (!prev_alloc && next_alloc) {
+    } 
+    // if previouss one not allocated
+    else if (!prev_alloc && next_alloc) {
         delete(ptr);
         delete(PREV_BLKP(ptr));
         size += GET_SIZE(HDRP(PREV_BLKP(ptr)));
         PUT(FTRP(ptr), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(ptr)), PACK(size, 0));
         ptr = PREV_BLKP(ptr);
-    } else {
+    } 
+    // if both free 
+    else {
         delete(ptr);
         delete(PREV_BLKP(ptr));
         delete(NEXT_BLKP(ptr));
@@ -275,7 +363,8 @@ void* place(void* ptr, size_t alignedsize){
 		PUT(HDRP(ptr), PACK(psize, 1));
 		PUT(FTRP(ptr), PACK(psize, 1));
 	}
-	else if (alignedsize >= 100){
+
+	else if (alignedsize > DSIZE * 2){
 
 		PUT(HDRP(ptr), PACK(r, 0));
 		PUT(FTRP(ptr), PACK(r, 0));
@@ -285,7 +374,8 @@ void* place(void* ptr, size_t alignedsize){
 
 		return NEXT_BLKP(ptr);
 	}
-	else{
+
+	else {
 
 		PUT(HDRP(ptr), PACK(alignedsize, 1));
 		PUT(FTRP(ptr), PACK(alignedsize, 1));
